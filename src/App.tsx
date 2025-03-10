@@ -19,6 +19,10 @@ import { useEffect, useRef, useState } from 'react';
 
 import { AvatarImage } from '@radix-ui/react-avatar';
 import { imborData } from './data/imbordata';
+import { imborDef } from './data/imbordef';
+
+// Add this constant at the top of the file
+const BASE_URL = import.meta.env.BASE_URL;
 
 // Custom Command components implementation
 const CustomCommandInput = ({
@@ -77,20 +81,26 @@ const App = () => {
 
   // URL routing
   useEffect(() => {
-    // Handle initial URL and browser navigation
     const handleUrlNavigation = () => {
-      const path = window.location.pathname;
+      // Get the full path and remove any double slashes
+      const fullPath = window.location.pathname.replace(/\/+/g, '/');
       const searchParams = new URLSearchParams(window.location.search);
+
+      // Check if we're in the correct base path
+      if (!fullPath.startsWith(BASE_URL)) {
+        return;
+      }
+
+      // Remove the base URL from the path for processing
+      const path = fullPath.slice(BASE_URL.length - 1);
 
       if (path.includes('/detail/')) {
         const itemId = path.split('/detail/')[1];
-        // Find the item by ID or index
         const item = imborData[itemId] || null;
         if (item) {
           setSelectedItem(item);
           setView('detail');
         } else {
-          // Redirect to search if item not found
           navigateToSearch();
         }
       } else if (path.includes('/overview/')) {
@@ -103,33 +113,34 @@ const App = () => {
         } else {
           navigateToSearch();
         }
-      } else {
-        // Default to search view
+      } else if (path === '/' || path === '') {
         setView('search');
       }
     };
 
     handleUrlNavigation();
 
-    // Listen for browser navigation (back/forward)
     window.addEventListener('popstate', handleUrlNavigation);
     return () => window.removeEventListener('popstate', handleUrlNavigation);
   }, []);
 
   // Update URL when view changes
   useEffect(() => {
-    let url = '/';
+    let url = BASE_URL;
+    // Remove any trailing slash from BASE_URL
+    if (url.endsWith('/')) {
+      url = url.slice(0, -1);
+    }
 
     if (view === 'detail' && selectedItem) {
       const itemIndex = imborData.findIndex((item) => item === selectedItem);
-      url = `/detail/${itemIndex}`;
+      url = `${url}/detail/${itemIndex}`;
     } else if (view === 'overview') {
-      url = `/overview/?field=${overviewField}&value=${encodeURIComponent(
+      url = `${url}/overview/?field=${overviewField}&value=${encodeURIComponent(
         overviewValue
       )}`;
     }
 
-    // Update URL without triggering page reload
     window.history.pushState({}, '', url);
   }, [view, selectedItem, overviewField, overviewValue]);
 
@@ -275,6 +286,14 @@ const App = () => {
     }
   };
 
+  // Add a helper function to get definition
+  const getDefinition = (field: string, value: string) => {
+    const definition = imborDef.find(
+      (def) => def.domeinwaarde_domeinwaarde === value
+    );
+    return definition?.domeinwaarde_definitie || '-';
+  };
+
   // Render search view
   const renderSearchView = () => {
     return (
@@ -327,6 +346,14 @@ const App = () => {
   const renderDetailView = () => {
     if (!selectedItem) return null;
 
+    const fields = [
+      { label: 'Beheerlaag', field: 'beheerlaag' },
+      { label: 'Objecttype', field: 'objecttype' },
+      { label: 'Type', field: 'type' },
+      { label: 'Type detail', field: 'type_detail' },
+      { label: 'Type extra detail', field: 'type_extra_detail' },
+    ];
+
     return (
       <div className="w-full max-w-2xl mx-auto p-4">
         <Breadcrumb className="mb-4">
@@ -345,48 +372,35 @@ const App = () => {
           </CardHeader>
           <CardContent>
             <dl className="grid grid-cols-3 gap-4">
-              <dt className="font-semibold col-span-1">Beheerlaag:</dt>
-              <dd
-                className="col-span-2 underline cursor-pointer text-blue-600"
-                onClick={() =>
-                  handleFieldClick('beheerlaag', selectedItem.beheerlaag)
-                }
-              >
-                {selectedItem.beheerlaag || '-'}
-              </dd>
+              {fields.map(({ label, field }) => {
+                const value = selectedItem[field as keyof typeof selectedItem];
+                const definition = getDefinition(field, value);
 
-              <dt className="font-semibold col-span-1">Objecttype:</dt>
-              <dd
-                className="col-span-2 underline cursor-pointer text-blue-600"
-                onClick={() =>
-                  handleFieldClick('objecttype', selectedItem.objecttype)
-                }
-              >
-                {selectedItem.objecttype || '-'}
-              </dd>
-
-              <dt className="font-semibold col-span-1">Type:</dt>
-              <dd
-                className="col-span-2 underline cursor-pointer text-blue-600"
-                onClick={() => handleFieldClick('type', selectedItem.type)}
-              >
-                {selectedItem.type || '-'}
-              </dd>
-
-              <dt className="font-semibold col-span-1">Type detail:</dt>
-              <dd
-                className="col-span-2 underline cursor-pointer text-blue-600"
-                onClick={() =>
-                  handleFieldClick('type_detail', selectedItem.type_detail)
-                }
-              >
-                {selectedItem.type_detail || '-'}
-              </dd>
-
-              <dt className="font-semibold col-span-1">Type extra detail:</dt>
-              <dd className="col-span-2">
-                {selectedItem.type_extra_detail || '-'}
-              </dd>
+                return (
+                  <div key={field} className="col-span-3">
+                    <dt className="font-semibold">{label}:</dt>
+                    <dd
+                      className={`mt-1 ${
+                        field !== 'type_extra_detail' && value
+                          ? 'underline cursor-pointer text-blue-600'
+                          : ''
+                      }`}
+                      onClick={() =>
+                        field !== 'type_extra_detail' &&
+                        value &&
+                        handleFieldClick(field, value)
+                      }
+                    >
+                      {value || '-'}
+                    </dd>
+                    {definition !== '-' && (
+                      <dd className="mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                        {definition}
+                      </dd>
+                    )}
+                  </div>
+                );
+              })}
             </dl>
           </CardContent>
         </Card>

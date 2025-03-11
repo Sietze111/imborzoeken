@@ -6,7 +6,7 @@ import { SchemaView } from './components/schema/SchemaView';
 import { SearchView } from './components/search/SearchView';
 import { StatisticsView } from './components/statistics/StatisticsView';
 
-// Add this constant at the top of the file
+// Get base URL from environment
 const BASE_URL = import.meta.env.BASE_URL;
 
 const App = () => {

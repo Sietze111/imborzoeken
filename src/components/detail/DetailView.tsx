@@ -7,19 +7,60 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ErrorMessage } from '@/components/ui/error-message';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { imborData } from '@/data/imbordata';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { fields, getDefinition } from '@/utils/definitions';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 export const DetailView = () => {
-  const { itemId } = useParams();
+  usePageTitle('Object Details');
+  const { itemId } = useParams<{ itemId: string }>();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get item from itemId
-  const selectedItem = imborData[parseInt(itemId)];
+  const selectedItem = useMemo(() => {
+    setIsLoading(true);
+    try {
+      if (!itemId) {
+        setError('Geen object ID gevonden');
+        return null;
+      }
+      const item = imborData[parseInt(itemId)];
+      if (!item) {
+        setError('Object niet gevonden');
+        return null;
+      }
+      return item;
+    } catch (error) {
+      console.error(error);
+      setError('Er is een fout opgetreden bij het laden van het object');
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [itemId]);
 
-  if (!selectedItem) {
-    return <Navigate to="/" replace />;
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-2xl mx-auto p-4">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error || !selectedItem) {
+    return (
+      <div className="w-full max-w-2xl mx-auto p-4">
+        <ErrorMessage
+          message={error || 'Object niet gevonden'}
+          retry={() => navigate('/')}
+        />
+      </div>
+    );
   }
 
   const handleFieldClick = (field: string, value: string) => {
@@ -60,7 +101,7 @@ export const DetailView = () => {
                   <dd
                     className={`mt-1 ${
                       field !== 'type_extra_detail' && value
-                        ? 'underline cursor-pointer text-blue-600'
+                        ? 'underline cursor-pointer text-primary hover:text-primary/80'
                         : ''
                     }`}
                     onClick={() =>
@@ -72,7 +113,7 @@ export const DetailView = () => {
                     {value || '-'}
                   </dd>
                   {definition !== '-' && (
-                    <dd className="mt-1 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                    <dd className="mt-1 text-sm text-muted-foreground bg-muted p-2 rounded">
                       {definition}
                     </dd>
                   )}

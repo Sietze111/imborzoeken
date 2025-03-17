@@ -1,71 +1,74 @@
 import { imborData } from '@/data/imbordata';
+import Fuse from 'fuse.js';
 
-interface SearchItem {
+type ImborField = keyof (typeof imborData)[0];
+
+export interface SearchItem {
   id: string;
-  field: string;
+  field: ImborField;
   value: string;
   originalItem: (typeof imborData)[0];
   itemIndex: number;
 }
 
-export const prepareSearchItems = (): SearchItem[] => {
-  const searchItems: SearchItem[] = [];
+// Optimize search options
+const fuseOptions = {
+  includeScore: false, // Remove if we don't use the score
+  threshold: 0.3,
+  keys: ['value'],
+  minMatchCharLength: 2, // Only search terms of 2+ chars
+  shouldSort: true,
+  ignoreLocation: true, // Faster if we don't care about where the match occurs
+  cache: true, // Enable caching
+};
 
-  imborData.forEach((item, index) => {
-    const itemKey = `item-${index}`;
+// Pre-process search items once
+const searchItemsData = imborData.flatMap((item, index) =>
+  Object.entries(item)
+    .filter(([_, value]) => value && typeof value === 'string')
+    .map(([field, value]) => ({
+      id: `${index}-${field}`,
+      field: field as ImborField,
+      value: value as string,
+      originalItem: item,
+      itemIndex: index,
+    }))
+);
 
-    if (item.beheerlaag) {
-      searchItems.push({
-        id: `${itemKey}-beheerlaag`,
-        field: 'beheerlaag',
-        value: item.beheerlaag,
-        originalItem: item,
-        itemIndex: index,
-      });
-    }
+const fuse = new Fuse(searchItemsData, fuseOptions);
 
-    if (item.objecttype) {
-      searchItems.push({
-        id: `${itemKey}-objecttype`,
-        field: 'objecttype',
-        value: item.objecttype,
-        originalItem: item,
-        itemIndex: index,
-      });
-    }
+// Debounce and memoize search results
+const searchCache = new Map<string, SearchItem[]>();
 
-    if (item.type) {
-      searchItems.push({
-        id: `${itemKey}-type`,
-        field: 'type',
-        value: item.type,
-        originalItem: item,
-        itemIndex: index,
-      });
-    }
+export const searchItems = (
+  query: string,
+  type: string = 'all'
+): SearchItem[] => {
+  if (!query.trim()) return [];
 
-    if (item.type_detail) {
-      searchItems.push({
-        id: `${itemKey}-type_detail`,
-        field: 'type_detail',
-        value: item.type_detail,
-        originalItem: item,
-        itemIndex: index,
-      });
-    }
+  const cacheKey = `${query}-${type}`;
+  if (searchCache.has(cacheKey)) {
+    return searchCache.get(cacheKey)!;
+  }
 
-    if (item.type_extra_detail) {
-      searchItems.push({
-        id: `${itemKey}-type_extra_detail`,
-        field: 'type_extra_detail',
-        value: item.type_extra_detail,
-        originalItem: item,
-        itemIndex: index,
-      });
-    }
-  });
+  const results = fuse.search(query).map((result) => result.item);
+  const filtered =
+    type === 'all' ? results : results.filter((item) => item.field === type);
 
-  return searchItems;
+  const deduplicated = filtered.filter(
+    (item, index, self) =>
+      index ===
+      self.findIndex((t) => t.value === item.value && t.field === item.field)
+  );
+
+  searchCache.set(cacheKey, deduplicated);
+  if (searchCache.size > 100) {
+    // Prevent memory leaks
+    const firstKey = searchCache.keys().next().value;
+    searchCache.delete(firstKey);
+  }
+
+  return deduplicated;
 };
 
 export const findSimilarItems = (item: SearchItem) => {

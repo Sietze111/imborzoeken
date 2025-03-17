@@ -10,6 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { imborData } from '@/data/imbordata';
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 
+// Add type safety for field indexing
+type ImborField = keyof (typeof imborData)[0];
+
 export const OverviewView = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -21,7 +24,8 @@ export const OverviewView = () => {
   }
 
   const overviewItems = imborData.filter(
-    (item) => item[field] === decodeURIComponent(value)
+    (item) =>
+      field && item[field as ImborField] === decodeURIComponent(value || '')
   );
 
   const navigateToSearch = () => {
@@ -57,7 +61,7 @@ export const OverviewView = () => {
             {overviewItems.map((item, index) => (
               <Card
                 key={index}
-                className="w-full p-4 cursor-pointer hover:bg-gray-50"
+                className="w-full p-4 cursor-pointer hover:bg-accent"
                 onClick={() => {
                   const itemIndex = imborData.findIndex((i) => i === item);
                   navigate(`/detail/${itemIndex}`);

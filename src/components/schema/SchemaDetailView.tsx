@@ -86,7 +86,8 @@ export const ColumnTable = ({
     [columns]
   );
 
-  const truncateText = (text: string, maxLength: number = 100) => {
+  const truncateText = (text: string) => {
+    const maxLength = showCopyButton ? 60 : 100;
     if (text.length <= maxLength) return text;
     return `${text.slice(0, maxLength)}...`;
   };
@@ -114,7 +115,7 @@ export const ColumnTable = ({
             <TableHead className="w-[250px]">Attribuut</TableHead>
             <TableHead className="w-[150px]">Kolom</TableHead>
             <TableHead className="w-[150px]">Type</TableHead>
-            <TableHead>Definitie</TableHead>
+            <TableHead className="max-w-[400px]">Definitie</TableHead>
             {showCopyButton && (
               <TableHead className="w-[100px]">Acties</TableHead>
             )}
@@ -132,11 +133,11 @@ export const ColumnTable = ({
                 </code>
               </TableCell>
               <TableCell>{column.kolom_datatype}</TableCell>
-              <TableCell className="max-w-xl">
+              <TableCell className="max-w-[400px]">
                 <TooltipProvider>
                   <Tooltip delayDuration={200}>
                     <TooltipTrigger asChild>
-                      <span className="cursor-help">
+                      <span className="cursor-help block truncate">
                         {truncateText(column.kolom_definitie)}
                       </span>
                     </TooltipTrigger>

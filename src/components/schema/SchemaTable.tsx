@@ -72,10 +72,10 @@ export const SchemaTable = () => {
           className="max-w-sm"
         />
         <Select value={selectedType} onValueChange={setSelectedType}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-[300px]">
             <SelectValue placeholder="Filter op type" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="min-w-[300px]">
             <SelectItem value="all">Alle types</SelectItem>
             {uniqueTypes.map((type) => (
               <SelectItem key={type} value={type}>

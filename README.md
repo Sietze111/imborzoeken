@@ -1,54 +1,80 @@
-# React + TypeScript + Vite
+# IMBOR Zoeken
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**IMBOR Zoeken** is een webapplicatie waarmee gebruikers eenvoudig kunnen zoeken binnen alle termen van **IMBOR 2022**.
 
-Currently, two official plugins are available:
+De applicatie maakt het mogelijk om snel de juiste classificaties te vinden binnen het IMBOR-datamodel door middel van **fuzzy search** en filtering op verschillende niveaus van de IMBOR-structuur.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Functionaliteiten
 
-## Expanding the ESLint configuration
+- 🔎 **Fuzzy search**  
+  Zoek tolerant op termen, ook wanneer de exacte spelling niet bekend is.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- 🗂 **Zoeken op IMBOR structuur**  
+  Gebruikers kunnen zoeken binnen de volgende velden:
+  - `beheerlaag`
+  - `objecttype`
+  - `type`
+  - `type_detail`
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+- ⚡ **Snelle resultaten**  
+  De zoekfunctionaliteit is geoptimaliseerd om snel relevante resultaten te tonen.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- 📚 **IMBOR 2022 terminologie**  
+  Alle termen zijn gebaseerd op de officiële **IMBOR 2022** dataset.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Voorbeeld
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Zoekopdracht:
+
+Resultaat (voorbeeld):
+
+| beheerlaag | objecttype | type | type_detail |
+|------------|------------|------|-------------|
+| Groen      | Boom       | Loofboom | Laanboom |
+| Groen      | Boom       | Naaldboom | Den |
+
+Door fuzzy search kunnen ook varianten zoals:
+bom
+booom
+lanboom
+nog steeds correcte resultaten opleveren.
+
+## Gebruik
+
+1. Voer een zoekterm in.  
+2. De applicatie doorzoekt alle IMBOR velden.  
+3. Resultaten worden realtime weergegeven.
+
+## Doel van de applicatie
+
+IMBOR bevat een grote hoeveelheid gestandaardiseerde termen.  
+Deze applicatie helpt ontwikkelaars, beheerders en dataspecialisten om:
+
+- snel de juiste IMBOR-classificatie te vinden  
+- het datamodel beter te begrijpen  
+- consistent gebruik van IMBOR te stimuleren
+
+## Dataset
+
+De gebruikte dataset is gebaseerd op:
+
+**IMBOR 2022 – Informatiemodel Beheer Openbare Ruimte**
+
+Meer informatie: [CROW IMBOR](https://www.crow.nl/imbor)
+
+## Techniek
+
+De applicatie gebruikt:
+
+- **TypeScript / JavaScript**  
+- **Fuzzy search algoritme**  
+- Web interface voor interactieve zoekresultaten  
+
+## Bijdragen
+
+Pull requests zijn welkom.  
+Voor grotere wijzigingen kun je eerst een issue openen om te bespreken wat je wilt aanpassen.
+
+## Licentie
+
+MIT
